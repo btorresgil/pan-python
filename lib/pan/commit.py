@@ -20,26 +20,26 @@ import logging
 
 from . import DEBUG1, DEBUG2, DEBUG3
 
+import xml.etree.ElementTree as etree
+
 _valid_part = set([
     'device-and-network-excluded',
     'policy-and-objects-excluded',
     'shared-object-excluded',
     'no-vsys',
-    'vsys',
-    ])
+    'vsys'])
 
 _part_xml = {
     'device-and-network-excluded':
-        '<device-and-network>excluded</device-and-network>',
+    '<device-and-network>excluded</device-and-network>',
     'policy-and-objects-excluded':
-        '<policy-and-objects>excluded</policy-and-objects>',
+    '<policy-and-objects>excluded</policy-and-objects>',
     'shared-object-excluded':
-        '<shared-object>excluded</shared-object>',
+    '<shared-object>excluded</shared-object>',
     'no-vsys':
-        '<no-vsys></no-vsys>',
+    '<no-vsys></no-vsys>',
     'vsys':
-        '<member>%s</member>',
-    }
+    '<member>%s</member>'}
 
 
 def valid_part(part):
@@ -95,7 +95,7 @@ class PanCommit:
             part = 'vsys'
             self.partial.add(part)
 
-        if type(vsys) == type(''):
+        if isinstance(vsys, str):
             vsys = [vsys]
         for name in vsys:
             self._vsys.add(name)
@@ -113,31 +113,35 @@ class PanCommit:
             return self.__commit()
 
     def __commit_all(self):
-        s = '<commit-all><shared-policy>'
-
-        if self._device:
-            s += '<device>%s</device>' % self._device
+        e = etree.Element("commit-all")
+        sp = etree.SubElement(e, "shared-policy")
 
         if self._device_group:
-            s += '<device-group>%s</device-group>' % self._device_group
+            dg = etree.SubElement(sp, "device-group")
+            n = etree.SubElement(dg, "name")
+            n.text = self._device_group
+
+            if self._device:
+                d = etree.SubElement(dg, "devices")
+                en = etree.SubElement(d, "entry", name=self._device)
 
         # default when no <merge-with-candidate-cfg/> is 'yes'
         # we default to 'no' like the Web UI
-        merge_xml = '<merge-with-candidate-cfg>%s</merge-with-candidate-cfg>'
+        m = etree.SubElement(sp, "merge-with-candidate-cfg")
+
         if self._merge_with_candidate:
-            merge = 'yes'
+            m.text = 'yes'
         else:
-            merge = 'no'
-        s += merge_xml % merge
+            m.text = 'no'
 
         if self._vsys:
-            s += '<vsys>%s</vsys>' % self._vsys.pop()
+            v = etree.SubElement(sp, "vsys")
+            v.text = self._vsys.pop()
 
-        s += '</shared-policy></commit-all>'
 
         self._log(DEBUG1, 'commit-all cmd: %s', s)
 
-        return s
+        return etree.tostring(e)
 
     def __commit(self):
         s = '<commit>'
