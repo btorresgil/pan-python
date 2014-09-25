@@ -75,10 +75,10 @@ class PanXapi:
                  cafile=None,
                  capath=None):
         self.tag = tag
-        self.api_username = None
-        self.api_password = None
-        self.api_key = None
-        self.hostname = None
+        self.api_username = api_username
+        self.api_password = api_password
+        self.api_key = api_key
+        self.hostname = hostname
         self.port = port
         self.serial = serial
         self.use_get = use_get
@@ -105,58 +105,6 @@ class PanXapi:
                     raise ValueError
             except ValueError:
                 raise PanXapiError('Invalid timeout: %s' % self.timeout)
-
-        init_panrc = {}  # .panrc args from constructor
-        if api_username is not None:
-            init_panrc['api_username'] = api_username
-        if api_password is not None:
-            init_panrc['api_password'] = api_password
-        if api_key is not None:
-            init_panrc['api_key'] = api_key
-        if hostname is not None:
-            init_panrc['hostname'] = hostname
-        if port is not None:
-            init_panrc['port'] = port
-        if serial is not None:
-            init_panrc['serial'] = serial
-
-        try:
-            panrc = pan.rc.PanRc(debug=self.debug,
-                                 tag=self.tag,
-                                 init_panrc=init_panrc)
-        except pan.rc.PanRcError as msg:
-            raise PanXapiError(str(msg))
-
-        # If we get a api_username and api_password in the constructor
-        # and no api_key, delete api_key inherited from .panrc if any.
-        # Prevent confusion when you specify a api_username and
-        # api_password but they are not used due to existence of
-        # api_key in .panrc.
-        if ('api_key' in panrc.panrc and
-                api_username is not None and
-                api_password is not None and
-                api_key is None):
-            del panrc.panrc['api_key']
-            logger.debug3('ignoring .panrc inherited api_key')
-
-        if 'api_username' in panrc.panrc:
-            self.api_username = panrc.panrc['api_username']
-        if 'api_password' in panrc.panrc:
-            self.api_password = panrc.panrc['api_password']
-        if 'api_key' in panrc.panrc:
-            self.api_key = panrc.panrc['api_key']
-        if 'hostname' in panrc.panrc:
-            self.hostname = panrc.panrc['hostname']
-        if 'port' in panrc.panrc:
-            self.port = panrc.panrc['port']
-            try:
-                self.port = int(self.port)
-                if self.port < 1 or self.port > 65535:
-                    raise ValueError
-            except ValueError:
-                raise PanXapiError('Invalid port from .panrc: %s' % self.port)
-        if 'serial' in panrc.panrc:
-            self.serial = panrc.panrc['serial']
 
         if self.hostname is None:
             raise PanXapiError('hostname argument required')
@@ -246,7 +194,7 @@ class PanXapi:
             self.status_detail = 'no content-disposition response header'
             return False
 
-        if not 'attachment' in content_disposition:
+        if 'attachment' not in content_disposition:
             msg = 'no handler for content-disposition: %s' % \
                 content_disposition
             self.status_detail = msg
@@ -429,7 +377,19 @@ class PanXapi:
         if result:
             if (self.element_result is None or
                     not len(self.element_result)):
-                return None
+                if self.element_result is not None:
+                    if self.element_result.text is not None:  # ADDED BY BTORRESGIL
+                        text_strip = self.element_result.text.strip()
+                        if text_strip == 'yes':
+                            return True
+                        elif text_strip == 'no':
+                            return False
+                        else:
+                            return self.element_result.text
+                    else:
+                        return None
+                else:
+                    return None
             elem = list(self.element_result)[0]  # XXX
         else:
             if self.element_root is None:
