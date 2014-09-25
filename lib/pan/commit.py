@@ -176,15 +176,3 @@ class PanCommit:
         logger.debug2('commit cmd:' % s)
 
         return s
-
-if __name__ == '__main__':
-    from __future__ import print_function
-    import pan.commit
-
-    c = pan.commit.PanCommit()
-    c.force()
-    c.device_and_network_excluded()
-    c.policy_and_objects_excluded()
-    c.shared_object_excluded()
-    c.vsys(['vsys4', 'vsys5'])
-    print('cmd:', c.cmd())
