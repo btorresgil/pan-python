@@ -21,7 +21,7 @@ import logging
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
-valid_part = set([
+_valid_part = set([
     'device-and-network-excluded',
     'policy-and-objects-excluded',
     'shared-object-excluded',
