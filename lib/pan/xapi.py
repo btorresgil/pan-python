@@ -135,9 +135,7 @@ class PanXapi:
                 api_password is not None and
                 api_key is None):
             del panrc.panrc['api_key']
-            if self.debug1:
-                print('ignoring .panrc inherited api_key',
-                      file=sys.stderr)
+            logger.debug3('ignoring .panrc inherited api_key')
 
         if 'api_username' in panrc.panrc:
             self.api_username = panrc.panrc['api_username']
@@ -314,8 +312,8 @@ class PanXapi:
         path = './msg/line/uid-response/payload/*/entry'
         elem = self.element_root.findall(path)
         if len(elem) > 0:
-            if self.debug2:
-                print('path:', path, elem, file=sys.stderr)
+            logger.debug('path: %(path)s, element: %(elem)s' %
+                         {'path': path, 'elem': elem})
             for line in elem:
                 msg = ''
                 for key in line.keys():
