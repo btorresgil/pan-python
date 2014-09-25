@@ -933,7 +933,7 @@ if __name__ == '__main__':
                                 tag=tag)
         xapi.show(xpath=xpath)
     except pan.xapi.PanXapiError as msg:
-        logger.error('pan.xapi.PanXapi: %s' % (msg,))
+        rootLogger.error('pan.xapi.PanXapi: %s' % (msg,))
         sys.exit(1)
-    logger.debug('show: %s' % (xapi.status,))
-    logger.debug(xapi.xml_document)
+    rootLogger.debug('show: %s' % (xapi.status,))
+    rootLogger.debug(xapi.xml_document)
