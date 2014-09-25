@@ -21,7 +21,7 @@ interface to the XML API on Palo Alto Networks' Next-Generation
 Firewalls.
 """
 
-from __future__ import print_function
+import logging
 import sys
 import re
 import time
@@ -46,6 +46,9 @@ import pan.rc
 _encoding = 'utf-8'
 _job_query_interval = 0.5
 
+# Create a module logger
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 class PanXapiError(Exception):
     def __init__(self, msg):
@@ -59,7 +62,6 @@ class PanXapiError(Exception):
 
 class PanXapi:
     def __init__(self,
-                 debug=0,
                  tag=None,
                  api_username=None,
                  api_password=None,
@@ -72,14 +74,6 @@ class PanXapi:
                  timeout=None,
                  cafile=None,
                  capath=None):
-        self.debug = debug
-        self.debug1, self.debug2, self.debug3 = False, False, False
-        if self.debug > 0:
-            self.debug1 = True
-        if self.debug > 1:
-            self.debug2 = True
-        if self.debug > 2:
-            self.debug3 = True
         self.tag = tag
         self.api_username = None
         self.api_password = None
@@ -92,14 +86,9 @@ class PanXapi:
         self.cafile = cafile
         self.capath = capath
 
-        if self.debug > 3:
-            raise PanXapiError('Maximum debug level is 3')
-
-        if self.debug3:
-            print('Python version:', sys.version, file=sys.stderr)
-            print('xml.etree.ElementTree version:', etree.VERSION,
-                  file=sys.stderr)
-            print('pan-python version:', __version__, file=sys.stderr)
+        logger.debug3('Python version: %s' % sys.version)
+        logger.debug3('xml.etree.ElementTree version: %s' % etree.VERSION)
+        logger.debug3('pan-python version: %s' % __version__)
 
         if self.port is not None:
             try:
@@ -184,8 +173,8 @@ class PanXapi:
             self.uri += ':%s' % self.port
         self.uri += '/api/'
 
-        if self.debug2 and _legacy_urllib:
-            print('using legacy urllib', file=sys.stderr)
+        if _legacy_urllib:
+            logger.debug3('using legacy urllib')
 
     def __str__(self):
         return '\n'.join((': '.join((k, str(self.__dict__[k]))))
@@ -223,9 +212,9 @@ class PanXapi:
             types = [type.rstrip() for type in types]
             types = set(types)
 
-        if self.debug3:
-            print('__get_header(%s):' % name, s, file=sys.stderr)
-            print('__get_header:', types, file=sys.stderr)
+        logger.debug3('__get_header(%(header)s): %(result)s'
+                      % {'header': name, 'result': s})
+        logger.debug3('__get_header: %s' % types)
 
         return types
 
@@ -294,11 +283,9 @@ class PanXapi:
         self.element_root = element
         self.element_result = self.element_root.find('result')  # can be None
 
-        if self.debug3:
-            print('xml_document:', self.xml_document)
-            print('message_body:', type(message_body), file=sys.stderr)
-            print('message_body.decode():',
-                  type(self.xml_document), file=sys.stderr)
+        logger.debug('xml_document: %s' % self.xml_document)
+        logger.debug3('message_body: %s' % type(message_body))
+        logger.debug3('message_body.decode(): %s' % type(self.xml_document))
 
         response_attrib = self.element_root.attrib
         if not response_attrib:
@@ -325,8 +312,8 @@ class PanXapi:
         path = './msg/line'
         elem = self.element_root.findall(path)
         if len(elem) > 0:
-            if self.debug2:
-                print('path:', path, elem, file=sys.stderr)
+            logger.debug('path: %(path)s, element: %(elem)s' %
+                         {'path': path, 'elem': elem})
             for line in elem:
                 if line.text is not None:
                     lines.append(line.text)
@@ -340,8 +327,8 @@ class PanXapi:
         path = './result/msg/line'
         elem = self.element_root.findall(path)
         if len(elem) > 0:
-            if self.debug2:
-                print('path:', path, elem, file=sys.stderr)
+            logger.debug('path: %(path)s, element: %(elem)s' %
+                         {'path': path, 'elem': elem})
             for line in elem:
                 if line.text is not None:
                     lines.append(line.text)
@@ -350,8 +337,8 @@ class PanXapi:
         path = './result/msg'
         elem = self.element_root.find(path)
         if elem is not None:
-            if self.debug2:
-                print('path:', path, elem, file=sys.stderr)
+            logger.debug('path: %(path)s, element: %(elem)s' %
+                         {'path': path, 'elem': elem})
             if elem.text is not None:
                 lines.append(elem.text)
             return lines[0] if lines else None
@@ -359,8 +346,8 @@ class PanXapi:
         path = './msg'
         elem = self.element_root.find(path)
         if elem is not None:
-            if self.debug2:
-                print('path:', path, elem, file=sys.stderr)
+            logger.debug('path: %(path)s, element: %(elem)s' %
+                         {'path': path, 'elem': elem})
             if elem.text is not None:
                 lines.append(elem.text)
             return lines[0] if lines else None
@@ -369,8 +356,8 @@ class PanXapi:
         path = './result/job/details/line'
         elem = self.element_root.findall(path)
         if len(elem) > 0:
-            if self.debug2:
-                print('path:', path, elem, file=sys.stderr)
+            logger.debug('path: %(path)s, element: %(elem)s' %
+                         {'path': path, 'elem': elem})
             for line in elem:
                 if line.text is not None:
                     lines.append(line.text)
@@ -395,10 +382,8 @@ class PanXapi:
         if not s:
             return None
 
-        if self.debug3:
-            print('xml_root:', type(s), file=sys.stderr)
-            print('xml_root.decode():', type(s.decode(_encoding)),
-                  file=sys.stderr)
+        logger.debug3('xml_root: %s' % type(s))
+        logger.debug3('xml_root.decode(): %s' % type(s.decode(_encoding)))
         return s.decode(_encoding)
 
     def xml_result(self):
@@ -412,10 +397,8 @@ class PanXapi:
         if not s:
             return None
 
-        if self.debug3:
-            print('xml_result:', type(s), file=sys.stderr)
-            print('xml_result.decode():', type(s.decode(_encoding)),
-                  file=sys.stderr)
+        logger.debug3('xml_root: %s' % type(s))
+        logger.debug3('xml_root.decode(): %s' % type(s.decode(_encoding)))
         return s.decode(_encoding)
 
     # XXX xml_python() is not documented
@@ -437,8 +420,7 @@ class PanXapi:
             elem = self.element_root
 
         try:
-            conf = pan.config.PanConfig(debug=self.debug,
-                                        config=elem)
+            conf = pan.config.PanConfig(config=elem)
         except pan.config.PanConfigError as msg:
             raise PanXapiError('pan.config.PanConfigError: %s' % msg)
 
@@ -456,10 +438,9 @@ class PanXapi:
         else:
             data = urlencode(query)
 
-        if self.debug3:
-            print('query:', query, file=sys.stderr)
-            print('data:', type(data), file=sys.stderr)
-            print('data.encode():', type(data.encode()), file=sys.stderr)
+        logger.debug('query: %s' % query)
+        logger.debug3('data: %s' % type(data))
+        logger.debug3('data.encode(): %s' % type(data.encode()))
 
         url = self.uri
         if self.use_get:
@@ -469,10 +450,9 @@ class PanXapi:
             # data must by type 'bytes' for 3.x
             request = Request(url, data.encode())
 
-        if self.debug1:
-            print('URL:', url, file=sys.stderr)
-            print('method:', request.get_method(), file=sys.stderr)
-            print('data:', data, file=sys.stderr)
+        logger.debug('URL: %s' % url)
+        logger.debug('method: %s' % request.get_method())
+        logger.debug2('data: %s' % data)
 
         kwargs = {
             'url': request,
@@ -500,18 +480,14 @@ class PanXapi:
             self.status_detail = msg
             return False
 
-        if self.debug2:
-            print('HTTP response headers:', file=sys.stderr)
-            print(response.info(), file=sys.stderr)
+        logger.debug3('HTTP response headers: %s' % response.info())
 
         return response
 
     def __set_api_key(self):
         if self.api_key is None:
             self.keygen()
-            if self.debug1:
-                print('autoset api_key: "%s"' % self.api_key,
-                      file=sys.stderr)
+            logger.debug2('autoset api_key: "%s"' % self.api_key)
 
     def cmd_xml(self, cmd):
         xml = ''
@@ -527,8 +503,7 @@ class PanXapi:
             if re.search(r'^".*"$', arg) is None:
                 xml += '</%s>' % arg
 
-        if self.debug2:
-            print('cmd_xml: "%s"' % xml, file=sys.stderr)
+        logger.debug2('cmd_xml: "%s"' % xml)
 
         return xml
 
@@ -590,8 +565,7 @@ class PanXapi:
             if self.serial is not None:
                 query['target'] = self.serial
 
-        if self.debug1:
-            print(query, file=sys.stderr)
+        logger.debug('Query: %s' % query)
 
         response = self.__api_request(query)
         if not response:
@@ -743,10 +717,10 @@ class PanXapi:
 
         job = self.element_root.find('./result/job')
         if job is None:
+            logger.debug("can't find job id")
             return
 
-        if self.debug2:
-            print('commit job:', job.text, file=sys.stderr)
+        logger.debug('commit job: %s' % job.text)
 
         cmd = 'show jobs id "%s"' % job.text
         start_time = time.time()
@@ -762,21 +736,20 @@ class PanXapi:
             if status is None:
                 raise PanXapiError('no status element in ' +
                                    "'%s' response" % cmd)
+
+            logger.debug('job %(job)s, status %(status)s' %
+                         {'job': job.text, 'status': status.text})
+
             if status.text == 'FIN':
                 # XXX commit vs. commit-all job status
                 return
-
-            if self.debug2:
-                print('job %s status %s' % (job.text, status.text),
-                      file=sys.stderr)
 
             if (timeout is not None and timeout != 0 and
                     time.time() > start_time + timeout):
                 raise PanXapiError('timeout waiting for ' +
                                    'job %s completion' % job.text)
 
-            if self.debug2:
-                print('sleep %.2f seconds' % interval, file=sys.stderr)
+            logger.debug2('sleep %.2f seconds' % interval)
             time.sleep(interval)
 
     def op(self, cmd=None, vsys=None, cmd_xml=False):
@@ -880,8 +853,7 @@ class PanXapi:
         query['action'] = 'get'
         query['key'] = self.api_key
         query['job-id'] = job.text
-        if self.debug2:
-            print('log job:', job.text, file=sys.stderr)
+        logger.debug('log job: %s' % job.text)
 
         start_time = time.time()
 
@@ -900,17 +872,15 @@ class PanXapi:
             if status.text == 'FIN':
                 return
 
-            if self.debug2:
-                print('job %s status %s' % (job.text, status.text),
-                      file=sys.stderr)
+            logger.debug('job %(job)s, status %(status)s' %
+                         {'job': job.text, 'status': status.text})
 
             if (timeout is not None and timeout != 0 and
                     time.time() > start_time + timeout):
                 raise PanXapiError('timeout waiting for ' +
                                    'job %s completion' % job.text)
 
-            if self.debug2:
-                print('sleep %.2f seconds' % interval, file=sys.stderr)
+            logger.debug2('sleep %.2f seconds' % interval)
             time.sleep(interval)
 
 if __name__ == '__main__':
@@ -926,14 +896,27 @@ if __name__ == '__main__':
         xpath = sys.argv[2]
     if len(sys.argv) > 3 and int(sys.argv[3]):
         debug = int(sys.argv[3])
+    # map the debug argument to the logging level
+    if debug == 0: debug = logging.INFO
+    elif debug == 1: debug = logging.DEBUG
+    elif debug == 2: debug = 9  # DEBUG2
+    elif debug == 3: debug = 8  # DEBUG3
+
+    # set up logging to stdout
+    rootLogger = logging.getLogger()
+    rootLogger.setLevel(debug)
+    streamHandler = logging.StreamHandler(sys.stdout)
+    streamHandler.setLevel(debug)
+    formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    streamHandler.setFormatter(formatter)
+    rootLogger.addHandler(streamHandler)
 
     try:
-        xapi = pan.xapi.PanXapi(debug=debug,
-                                timeout=5,
+        xapi = pan.xapi.PanXapi(timeout=5,
                                 tag=tag)
         xapi.show(xpath=xpath)
     except pan.xapi.PanXapiError as msg:
-        print('pan.xapi.PanXapi:', msg, file=sys.stderr)
+        logger.error('pan.xapi.PanXapi: %s' % (msg,))
         sys.exit(1)
-    print('show:', xapi.status, file=sys.stderr)
-    print(xapi.xml_document)
+    logger.debug('show: %s' % (xapi.status,))
+    logger.debug(xapi.xml_document)

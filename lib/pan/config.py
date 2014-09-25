@@ -14,11 +14,15 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-from __future__ import print_function
+import logging
 import sys
 import xml.etree.ElementTree as etree
 #import lxml.etree as etree
 from . import __version__
+
+# Create a module logger
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 _encoding = 'utf-8'
 _tags_forcelist = set(['entry', 'member'])
@@ -34,34 +38,19 @@ class PanConfigError(Exception):
 
 class PanConfig:
     def __init__(self,
-                 debug=0,
                  config=None,
                  tags_forcelist=_tags_forcelist):
-        self.debug = debug
-        self.debug1, self.debug2, self.debug3 = False, False, False
-        if self.debug > 0:
-            self.debug1 = True
-        if self.debug > 1:
-            self.debug2 = True
-        if self.debug > 2:
-            self.debug3 = True
         self._config_version = 0  # 0 indicates not yet set
         self._config_panorama = None
         self._config_multi_vsys = None
 
-        if self.debug > 3:
-            raise PanConfigError('Maximum debug level is 3')
-
-        if self.debug3:
-            print('Python version:', sys.version, file=sys.stderr)
-            print('xml.etree.ElementTree version:', etree.VERSION,
-                  file=sys.stderr)
-            print('pan-python version:', __version__, file=sys.stderr)
+        logger.debug3('Python version: %s' % sys.version)
+        logger.debug3('xml.etree.ElementTree version: %s' % etree.VERSION)
+        logger.debug3('pan-python version: %s' % __version__)
 
         if config is None:
             raise PanConfigError('no config')
-        if self.debug2:
-            print(type(config), file=sys.stderr)
+        logger.debug('Config type: %s' % type(config))
 
         if hasattr(config, 'tag'):
             self.config_root = config
@@ -71,14 +60,12 @@ class PanConfig:
             except etree.ParseError as msg:
                 raise PanConfigError('ElementTree.fromstring ParseError: %s'
                                      % msg)
-        if self.debug1:
-            print('config_root:', self.config_root, file=sys.stderr)
+        logger.debug('config_root: %s' % self.config_root)
 
     def __find_xpath(self, xpath=None):
 # Not a true Xpath
 # http://docs.python.org/dev/library/xml.etree.elementtree.html#xpath-support
-        if self.debug1:
-            print('xpath:', xpath, file=sys.stderr)
+        logger.debug2('xpath: %s' % xpath)
         if xpath:
             try:
                 nodes = self.config_root.findall(xpath)
@@ -87,8 +74,7 @@ class PanConfig:
         else:
             nodes = [self.config_root]
 
-        if self.debug1:
-            print('xpath nodes:', nodes, file=sys.stderr)
+        logger.debug2('xpath nodes: %s' % nodes)
 
         return nodes
 
@@ -148,10 +134,8 @@ class PanConfig:
         if not s:
             return None
 
-        if self.debug3:
-            print('xml:', type(s), file=sys.stderr)
-            print('xml.decode():', type(s.decode(_encoding)),
-                  file=sys.stderr)
+        logger.debug3('xml: %s' % type(s))
+        logger.debug3('xml.decode(): %s' % type(s.decode(_encoding)))
         return s.decode(_encoding)
 
     def python(self, xpath=None):
@@ -178,9 +162,8 @@ class PanConfig:
             text_strip = text.strip()
         attrs = elem.items()
 
-        if self.debug3:
-            print('TAG(forcelist=%s): "%s"' % (forcelist, tag),
-                  file=sys.stderr)
+        logger.debug2('TAG(forcelist=%(forcelist)s): "%(tag)s"' %
+                      {'forcelist': forcelist, 'tag': tag})
 
         if forcelist:
             if tag not in obj:
@@ -251,13 +234,12 @@ class PanConfig:
             text_strip = text.strip()
         attrs = elem.items()
 
-        if self.debug3:
-            print('TAG(elem=%d): "%s"' % (len(elem), tag), file=sys.stderr)
-            print('text_strip: "%s"' % text_strip, file=sys.stderr)
-            print('attrs: %s' % attrs, file=sys.stderr)
-            print('path: "%s"' % path, file=sys.stderr)
-            print('obj: %s' % obj, file=sys.stderr)
-            print(file=sys.stderr)
+        logger.debug2('TAG(elem=%(index)d): "%(tag)s"' %
+                      {'index': len(elem), 'tag': tag})
+        logger.debug3('text_strip: "%s"' % text_strip)
+        logger.debug3('attrs: %s' % attrs)
+        logger.debug3('path: "%s"' % path)
+        logger.debug3('obj: %s' % obj)
 
         if not text_strip:
             obj.append(path)
@@ -307,15 +289,15 @@ class PanConfig:
             text_strip = text.strip()
         attrs = elem.items()
 
-        if self.debug3:
-            print('TAG(elem=%d member_list=%s): "%s"' %
-                  (len(elem), member_list, tag),
-                  file=sys.stderr)
-            print('text_strip: "%s"' % text_strip, file=sys.stderr)
-            print('attrs: %s' % attrs, file=sys.stderr)
-            print('path: "%s"' % path, file=sys.stderr)
-            print('obj: %s' % obj, file=sys.stderr)
-            print(file=sys.stderr)
+        logger.debug2('TAG(elem=%(index)d '
+                     'member_list=%(member_list)s): "%(tag)s"' %
+                     {'index': len(elem),
+                      'member_list': member_list,
+                      'tag': tag})
+        logger.debug3('text_strip: "%s"' % text_strip)
+        logger.debug3('attrs: %s' % attrs)
+        logger.debug3('path: "%s"' % path)
+        logger.debug3('obj: %s' % obj)
 
         for k, v in attrs:
             if k == 'name':
@@ -323,8 +305,8 @@ class PanConfig:
 
         if member_list:
             nodes = elem.findall('./member')
-            if self.debug3:
-                print('TAG(members=%d): "%s"' % (len(nodes), tag), file=sys.stderr)
+            logger.debug2('TAG(members=%(num)d): "%(tag)s"' %
+                         {'num': len(nodes), 'tag': tag})
             if len(nodes) > 1:
                 members = []
                 for e in nodes:

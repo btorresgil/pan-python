@@ -14,8 +14,12 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-from __future__ import print_function
 import sys
+import logging
+
+# Create a module logger
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 valid_part = set([
     'device-and-network-excluded',
@@ -45,11 +49,9 @@ def valid_part(part):
 
 class PanCommit:
     def __init__(self,
-                 debug=0,
                  force=False,
                  commit_all=False,
                  merge_with_candidate=False):
-        self.debug = debug
         self._force = force
         self._commit_all = commit_all
         self._merge_with_candidate = merge_with_candidate
@@ -127,9 +129,8 @@ class PanCommit:
             s += '<vsys>%s</vsys>' % self._vsys.pop()
 
         s += '</shared-policy></commit-all>'
+        logger.debug2('commit-all cmd: %s' % etree.tostring(e))
 
-        if self.debug:
-            print('commit-all cmd:', s, file=sys.stderr)
 
         return s
 
@@ -159,12 +160,12 @@ class PanCommit:
 
         s += '</commit>'
 
-        if self.debug:
-            print('commit cmd:', s, file=sys.stderr)
+        logger.debug2('commit cmd:' % s)
 
         return s
 
 if __name__ == '__main__':
+    from __future__ import print_function
     import pan.commit
 
     c = pan.commit.PanCommit()
