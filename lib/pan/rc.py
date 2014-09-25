@@ -14,11 +14,15 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-from __future__ import print_function
+import logging
 import sys
 import os
 import re
 import pprint
+
+# Create a module logger
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 _search_path = ['__init__()', '.', '~']
 _filename = '.panrc'
@@ -44,12 +48,10 @@ class PanRcError(Exception):
 
 class PanRc:
     def __init__(self,
-                 debug=0,
                  tag=None,
                  init_panrc=None,
                  search_path=_search_path,
                  filename=_filename):
-        self.debug = debug
         self.tag = tag
         self.init_panrc = init_panrc
         self.search_path = search_path
@@ -62,9 +64,8 @@ class PanRc:
                 raise PanRcError('tag must match regexp "%s"' % regexp)
 
         self.__parse_path()
-        if self.debug > 0:
-            s = pprint.pformat(self.panrc, indent=_indent)
-            print('panrc:', s, file=sys.stderr)
+        s = pprint.pformat(self.panrc, indent=_indent)
+        logger.debug('panrc: %s' % (s,))
 
     def __parse_path(self):
         panrcs = []
@@ -72,11 +73,9 @@ class PanRc:
         for basename in self.search_path:
             if basename == '__init__()':
                 if self.init_panrc:
-                    if self.debug > 1:
-                        s = pprint.pformat(self.init_panrc,
-                                           indent=_indent)
-                        print('__parse_path: __init__(): %s' %
-                              s, file=sys.stderr)
+                    s = pprint.pformat(self.init_panrc,
+                                       indent=_indent)
+                    logger.debug2('__parse_path: __init__(): %s' % (s,))
                     panrcs.append(self.init_panrc)
             else:
                 path = os.path.expanduser(basename)  # ~, ~user
@@ -84,10 +83,8 @@ class PanRc:
                 path = os.path.join(path, self.filename)
                 d = self.__parse_file(path)
                 if d:
-                    if self.debug > 1:
-                        s = pprint.pformat(d, indent=_indent)
-                        print('__parse_path: %s: %s' % (path, s),
-                              file=sys.stderr)
+                    s = pprint.pformat(d, indent=_indent)
+                    logger.debug2('__parse_path: %s: %s' % (path, s))
                     panrcs.append(d)
 
         if panrcs:
@@ -97,8 +94,7 @@ class PanRc:
         try:
             f = open(path, 'r')
         except IOError as msg:
-            if self.debug > 2:
-                print('open %s: %s' % (path, msg), file=sys.stderr)
+            logger.debug3('open %s: %s' % (path, msg))
             return None
 
         panrc = {}
@@ -122,9 +118,8 @@ class PanRc:
 
     def __merge_panrcs(self, panrcs):
         panrcs.reverse()
-        if self.debug > 1:
-            s = pprint.pformat(panrcs, indent=_indent)
-            print('panrcs:', s, file=sys.stderr)
+        s = pprint.pformat(panrcs, indent=_indent)
+        logger.debug2('panrcs:', (s,))
 
         for panrc in panrcs:
             for key in panrc.keys():
@@ -140,12 +135,26 @@ if __name__ == '__main__':
         tag = sys.argv[1]
     if len(sys.argv) > 2 and int(sys.argv[2]):
         debug = int(sys.argv[2])
+    # map the debug argument to the logging level
+    if debug == 0: debug = logging.INFO
+    elif debug == 1: debug = logging.DEBUG
+    elif debug == 2: debug = 9  # DEBUG2
+    elif debug == 3: debug = 8  # DEBUG3
+
+    # set up logging to stdout
+    rootLogger = logging.getLogger()
+    rootLogger.setLevel(debug)
+    streamHandler = logging.StreamHandler(sys.stdout)
+    streamHandler.setLevel(debug)
+    formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    streamHandler.setFormatter(formatter)
+    rootLogger.addHandler(streamHandler)
 
     try:
-        rc = pan.rc.PanRc(debug=debug,
-                          tag=tag)
+        rc = pan.rc.PanRc(tag=tag)
     except PanRcError as msg:
-        print('pan.rc.PanRc:', msg, file=sys.stderr)
+        rootLogger.error('pan.rc.PanRc: %s' % (msg,))
         sys.exit(1)
     if not debug:
-        print('panrc:', pprint.pformat(rc.panrc, indent=_indent))
+        rootLogger.info('panrc: %s' %
+                        (pprint.pformat(rc.panrc, indent=_indent),))

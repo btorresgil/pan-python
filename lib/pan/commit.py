@@ -15,7 +15,11 @@
 #
 
 from __future__ import print_function
-import sys
+import logging
+
+# Create a module logger
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 _valid_part = set([
     'device-and-network-excluded',
@@ -45,12 +49,10 @@ def valid_part(part):
 
 class PanCommit:
     def __init__(self,
-                 debug=0,
                  validate=False,
                  force=False,
                  commit_all=False,
                  merge_with_candidate=False):
-        self.debug = debug
         self._validate = validate
         self._force = force
         self._commit_all = commit_all
@@ -133,8 +135,8 @@ class PanCommit:
 
         s += '</shared-policy></commit-all>'
 
-        if self.debug:
-            print('commit-all cmd:', s, file=sys.stderr)
+        logger.debug2('commit-all cmd: %s' % etree.tostring(e))
+
 
         return s
 
@@ -170,8 +172,7 @@ class PanCommit:
 
         s += '</commit>'
 
-        if self.debug:
-            print('commit cmd:', s, file=sys.stderr)
+        logger.debug2('commit cmd:' % s)
 
         return s
 
