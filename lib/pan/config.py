@@ -44,13 +44,13 @@ class PanConfig:
         self._config_panorama = None
         self._config_multi_vsys = None
 
-        logger.debug3('Python version: %s' % sys.version)
-        logger.debug3('xml.etree.ElementTree version: %s' % etree.VERSION)
-        logger.debug3('pan-python version: %s' % __version__)
+        logger.debug4('Python version: %s' % sys.version)
+        logger.debug4('xml.etree.ElementTree version: %s' % etree.VERSION)
+        logger.debug4('pan-python version: %s' % __version__)
 
         if config is None:
             raise PanConfigError('no config')
-        logger.debug('Config type: %s' % type(config))
+        logger.debug2('Config type: %s' % type(config))
 
         if hasattr(config, 'tag'):
             self.config_root = config
@@ -60,12 +60,12 @@ class PanConfig:
             except etree.ParseError as msg:
                 raise PanConfigError('ElementTree.fromstring ParseError: %s'
                                      % msg)
-        logger.debug('config_root: %s' % self.config_root)
+        logger.debug2('config_root: %s' % self.config_root)
 
     def __find_xpath(self, xpath=None):
 # Not a true Xpath
 # http://docs.python.org/dev/library/xml.etree.elementtree.html#xpath-support
-        logger.debug2('xpath: %s' % xpath)
+        logger.debug3('xpath: %s' % xpath)
         if xpath:
             try:
                 nodes = self.config_root.findall(xpath)
@@ -74,7 +74,7 @@ class PanConfig:
         else:
             nodes = [self.config_root]
 
-        logger.debug2('xpath nodes: %s' % nodes)
+        logger.debug3('xpath nodes: %s' % nodes)
 
         return nodes
 
@@ -134,8 +134,8 @@ class PanConfig:
         if not s:
             return None
 
-        logger.debug3('xml: %s' % type(s))
-        logger.debug3('xml.decode(): %s' % type(s.decode(_encoding)))
+        logger.debug4('xml: %s' % type(s))
+        logger.debug4('xml.decode(): %s' % type(s.decode(_encoding)))
         return s.decode(_encoding)
 
     def python(self, xpath=None):
@@ -161,7 +161,7 @@ class PanConfig:
             text_strip = text.strip()
         attrs = elem.items()
 
-        logger.debug2('TAG(forcelist=%(forcelist)s): "%(tag)s"' %
+        logger.debug3('TAG(forcelist=%(forcelist)s): "%(tag)s"' %
                       {'forcelist': forcelist, 'tag': tag})
 
         if forcelist:
@@ -232,12 +232,12 @@ class PanConfig:
             text_strip = text.strip()
         attrs = elem.items()
 
-        logger.debug2('TAG(elem=%(index)d): "%(tag)s"' %
+        logger.debug3('TAG(elem=%(index)d): "%(tag)s"' %
                       {'index': len(elem), 'tag': tag})
-        logger.debug3('text_strip: "%s"' % text_strip)
-        logger.debug3('attrs: %s' % attrs)
-        logger.debug3('path: "%s"' % path)
-        logger.debug3('obj: %s' % obj)
+        logger.debug4('text_strip: "%s"' % text_strip)
+        logger.debug4('attrs: %s' % attrs)
+        logger.debug4('path: "%s"' % path)
+        logger.debug4('obj: %s' % obj)
 
         if not text_strip:
             obj.append(path)
@@ -286,15 +286,15 @@ class PanConfig:
             text_strip = text.strip()
         attrs = elem.items()
 
-        logger.debug2('TAG(elem=%(index)d '
+        logger.debug3('TAG(elem=%(index)d '
                      'member_list=%(member_list)s): "%(tag)s"' %
                      {'index': len(elem),
                       'member_list': member_list,
                       'tag': tag})
-        logger.debug3('text_strip: "%s"' % text_strip)
-        logger.debug3('attrs: %s' % attrs)
-        logger.debug3('path: "%s"' % path)
-        logger.debug3('obj: %s' % obj)
+        logger.debug4('text_strip: "%s"' % text_strip)
+        logger.debug4('attrs: %s' % attrs)
+        logger.debug4('path: "%s"' % path)
+        logger.debug4('obj: %s' % obj)
 
         for k, v in attrs:
             if k == 'name':
@@ -302,7 +302,7 @@ class PanConfig:
 
         if member_list:
             nodes = elem.findall('./member')
-            logger.debug2('TAG(members=%(num)d): "%(tag)s"' %
+            logger.debug3('TAG(members=%(num)d): "%(tag)s"' %
                          {'num': len(nodes), 'tag': tag})
             if len(nodes) > 1:
                 members = []

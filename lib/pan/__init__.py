@@ -4,8 +4,10 @@ __version__ = '0.4.0-current'
 import logging
 DEBUG2 = 9
 DEBUG3 = 8
+DEBUG4 = 7
 logging.addLevelName(DEBUG2, "DEBUG2")
 logging.addLevelName(DEBUG3, "DEBUG3")
+logging.addLevelName(DEBUG4, "DEBUG4")
 
 
 def debug2(self, msg, *args, **kwargs):
@@ -20,3 +22,10 @@ def debug3(self, msg, *args, **kwargs):
         self._log(DEBUG3, msg, args, **kwargs)
 
 logging.Logger.debug3 = debug3
+
+
+def debug4(self, msg, *args, **kwargs):
+    if self.isEnabledFor(DEBUG4):
+        self._log(DEBUG4, msg, args, **kwargs)
+
+logging.Logger.debug4 = debug4

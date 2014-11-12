@@ -65,7 +65,7 @@ class PanRc:
 
         self.__parse_path()
         s = pprint.pformat(self.panrc, indent=_indent)
-        logger.debug('panrc: %s' % (s,))
+        logger.debug2('panrc: %s' % (s,))
 
     def __parse_path(self):
         panrcs = []
@@ -75,7 +75,7 @@ class PanRc:
                 if self.init_panrc:
                     s = pprint.pformat(self.init_panrc,
                                        indent=_indent)
-                    logger.debug2('__parse_path: __init__(): %s' % (s,))
+                    logger.debug3('__parse_path: __init__(): %s' % (s,))
                     panrcs.append(self.init_panrc)
             else:
                 path = os.path.expanduser(basename)  # ~, ~user
@@ -84,7 +84,7 @@ class PanRc:
                 d = self.__parse_file(path)
                 if d:
                     s = pprint.pformat(d, indent=_indent)
-                    logger.debug2('__parse_path: %s: %s' % (path, s))
+                    logger.debug3('__parse_path: %s: %s' % (path, s))
                     panrcs.append(d)
 
         if panrcs:
@@ -94,7 +94,7 @@ class PanRc:
         try:
             f = open(path, 'r')
         except IOError as msg:
-            logger.debug3('open %s: %s' % (path, msg))
+            logger.debug4('open %s: %s' % (path, msg))
             return None
 
         panrc = {}
@@ -119,7 +119,7 @@ class PanRc:
     def __merge_panrcs(self, panrcs):
         panrcs.reverse()
         s = pprint.pformat(panrcs, indent=_indent)
-        logger.debug2('panrcs:', (s,))
+        logger.debug3('panrcs:', (s,))
 
         for panrc in panrcs:
             for key in panrc.keys():
@@ -138,8 +138,8 @@ if __name__ == '__main__':
     # map the debug argument to the logging level
     if debug == 0: debug = logging.INFO
     elif debug == 1: debug = logging.DEBUG
-    elif debug == 2: debug = 9  # DEBUG2
-    elif debug == 3: debug = 8  # DEBUG3
+    elif debug == 2: debug = 9  # debug3
+    elif debug == 3: debug = 8  # debug4
 
     # set up logging to stdout
     rootLogger = logging.getLogger()

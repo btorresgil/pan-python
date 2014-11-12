@@ -173,6 +173,6 @@ class PanCommit:
 
         s += '</commit>'
 
-        logger.debug2('commit cmd:' % s)
+        logger.debug3('commit cmd:' % s)
 
         return s
