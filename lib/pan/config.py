@@ -172,9 +172,11 @@ class PanConfig:
 
         else:
             if not len(elem) and not text_strip and not attrs:
+                self._log(DEBUG3, 'no children, no text, no attrs')
                 obj[tag] = None
                 return
             if not len(elem) and text_strip and not attrs:
+                self._log(DEBUG3, 'no children, yes text, no attrs')
                 if text_strip == 'yes':
                     obj[tag] = True
                 elif text_strip == 'no':
@@ -182,6 +184,8 @@ class PanConfig:
                 else:
                     obj[tag] = text
                 return
+
+            self._log(DEBUG3, 'yes children, ?? text, ?? attrs')
 
             obj[tag] = {}
             o = obj[tag]
