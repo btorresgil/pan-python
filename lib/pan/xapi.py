@@ -468,7 +468,7 @@ class PanXapi:
         else:
             data = urlencode(query)
 
-        self._log(DEBUG3, 'query: %s', query)
+        self._log(DEBUG1, 'query: %s', query)
         self._log(DEBUG3, 'data: %s', type(data))
         self._log(DEBUG3, 'data.encode(): %s', type(data.encode()))
 
@@ -651,7 +651,7 @@ class PanXapi:
             if self.serial is not None:
                 query['target'] = self.serial
 
-        self._log(DEBUG2, '%s', query)
+        self._log(DEBUG1, '%s', query)
 
         response = self.__api_request(query)
         if not response:
