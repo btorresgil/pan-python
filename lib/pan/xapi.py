@@ -193,7 +193,7 @@ class PanXapi:
         self.uri += '/api/' if not self._legacy_api else '/esp/restapi.esp'
 
         if _legacy_urllib:
-            self._log(DEBUG2, 'using legacy urllib')
+            self._log(DEBUG3, 'using legacy urllib')
 
     def __str__(self):
         x = self.__dict__.copy()
@@ -324,9 +324,9 @@ class PanXapi:
             self.element_result = self.element_root.find('report/result')
 
         if self.element_root.find('./result/key') is None:
-            self._log(DEBUG3, 'xml_document: %s', self.xml_document)
+            self._log(DEBUG1, 'xml_document: %s', self.xml_document)
         else:
-            self._log(DEBUG3, 'xml_document: %s',
+            self._log(DEBUG1, 'xml_document: %s',
                       '<type=keygen response not shown>')
         self._log(DEBUG3, 'message_body: %s', type(message_body))
         self._log(DEBUG3, 'message_body.decode(): %s', type(self.xml_document))
@@ -356,7 +356,7 @@ class PanXapi:
     def __set_text_response(self, message_body):
         self.text_document = message_body.decode(_encoding)
 
-        self._log(DEBUG3, 'text_document: %s', self.text_document)
+        self._log(DEBUG1, 'text_document: %s', self.text_document)
         self._log(DEBUG3, 'message_body: %s', type(message_body))
         self._log(DEBUG3, 'message_body.decode(): %s',
                   type(self.text_document))
@@ -515,7 +515,7 @@ class PanXapi:
             # data must by type 'bytes' for 3.x
             request = Request(url, data.encode())
 
-        self._log(DEBUG1, 'method: %s', request.get_method())
+        self._log(DEBUG2, 'method: %s', request.get_method())
 
         kwargs = {
             'url': request,
@@ -560,8 +560,8 @@ class PanXapi:
             self.status_detail = msg
             return False
 
-        self._log(DEBUG2, 'HTTP response headers:')
-        self._log(DEBUG2, '%s', response.info())
+        self._log(DEBUG3, 'HTTP response headers:')
+        self._log(DEBUG3, '%s', response.info())
 
         return response
 
@@ -705,7 +705,7 @@ class PanXapi:
             if self.serial is not None:
                 query['target'] = self.serial
 
-        self._log(DEBUG1, '%s', query)
+        self._log(DEBUG2, '%s', query)
 
         response = self.__api_request(query)
         if not response:

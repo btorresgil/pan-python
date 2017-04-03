@@ -65,7 +65,7 @@ class PanRc:
 
         self.__parse_path()
         s = pprint.pformat(self.__sanitize_obj(self.panrc), indent=_indent)
-        self._log(DEBUG1, 'panrc: %s', s)
+        self._log(DEBUG3, 'panrc: %s', s)
 
     def __parse_path(self):
         panrcs = []
@@ -75,7 +75,7 @@ class PanRc:
                 if self.init_panrc:
                     s = pprint.pformat(self.__sanitize_obj(self.init_panrc),
                                        indent=_indent)
-                    self._log(DEBUG2, '__parse_path: __init__(): %s', s)
+                    self._log(DEBUG3, '__parse_path: __init__(): %s', s)
                     panrcs.append(self.init_panrc)
             else:
                 path = os.path.expanduser(basename)  # ~, ~user
@@ -84,7 +84,7 @@ class PanRc:
                 d = self.__parse_file(path)
                 if d:
                     s = pprint.pformat(self.__sanitize_obj(d), indent=_indent)
-                    self._log(DEBUG2, '__parse_path: %s: %s', path, s)
+                    self._log(DEBUG3, '__parse_path: %s: %s', path, s)
                     panrcs.append(d)
 
         if panrcs:
@@ -119,7 +119,7 @@ class PanRc:
     def __merge_panrcs(self, panrcs):
         panrcs.reverse()
         s = pprint.pformat(self.__sanitize_obj(panrcs), indent=_indent)
-        self._log(DEBUG2, 'panrcs: %s', s)
+        self._log(DEBUG3, 'panrcs: %s', s)
 
         for panrc in panrcs:
             for key in panrc.keys():
